@@ -1,14 +1,25 @@
 {-# LANGUAGE BlockArguments #-}
 
-import Control.Monad (forever)
 import qualified Data.ByteString.Lazy as BS
-import Node
+import Node (emptyNode, handleRawMessage)
+import Data.Maybe (fromJust)
+import qualified Data.ByteString.Lazy.Char8 as BC
+
+-- main :: IO ()
+-- main = loop emptyNode
+--  where
+--    loop node = do
+--      input <- BS.getContents
+--      case handleRawMessage node input of
+--        Just (updatedNode, output) -> do
+--          BS.putStr output
+--          loop updatedNode
+--        Nothing -> loop node
 
 main :: IO ()
-main = forever $ do
+main = do
   input <- BS.getContents
-  BS.putStr input
-  let maybeResult = handleRawMessage input
-   in case maybeResult of
-        Just (_, output) -> BS.putStr output
-        Nothing -> return ()
+  let result = $! handleRawMessage emptyNode  input
+    in putStrLn $! BC.unpack $ snd (fromJust result)
+  
+  
