@@ -38,6 +38,7 @@ library:
   dependencies:
   - aeson
   - bytestring
+  - text
 executables:
   maelstrom-exe:
     main:                Main.hs
