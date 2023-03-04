@@ -39,6 +39,7 @@ library:
   - aeson
   - bytestring
   - text
+  - aeson-casing
 executables:
   maelstrom-exe:
     main:                Main.hs
@@ -61,3 +62,6 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - maelstrom
+    - hspec
+    - bytestring
+    - aeson

@@ -1,7 +1,9 @@
 module Node
   ( handleRawMessage,
+    handleMessage,
     Node (Node),
     emptyNode,
+    decodeMessage
   )
 where
 
@@ -18,11 +20,12 @@ data Node = Node
   deriving (Show)
 
 emptyNode :: Node
-emptyNode = Node {
-  nodeID = "",
-  nextMsgID = 0,
-  nodeIDs = []
-}
+emptyNode =
+  Node
+    { nodeID = "",
+      nextMsgID = 0,
+      nodeIDs = []
+    }
 
 handleRawMessage :: Node -> BS.ByteString -> Maybe (Node, BS.ByteString)
 handleRawMessage node input = do
@@ -31,22 +34,25 @@ handleRawMessage node input = do
   Just (newNode, encode outputMsg)
 
 handleMessage :: Node -> Message -> Maybe (Node, Message)
-handleMessage node msg@(Message _ _ (Just b)) =
-  case messageType b of
-    InitMessageType -> Just (newNode, msg {body = body newMessage})
-      where (newNode, newMessage) = handleInitMessage node msg
+handleMessage node msg@(Message _ _ b) =
+  case msgType b of
+    InitMessageType -> Just (newNode, newMessage)
+      where
+        (newNode, newMessage) = handleInitMessage node msg
     CustomMessageType _ -> Just (node, msg)
     InitOkType -> Nothing
-handleMessage node msg = Just (node, msg)
 
 handleInitMessage :: Node -> Message -> (Node, Message)
 handleInitMessage node inputMsg = (newNode, msg)
   where
-     inputBody = fromJust $ body inputMsg
-     newMsgId = msgID inputBody
-     newNode = updateNode node (fromJust $ nodeId inputBody) (fromJust $ nodeIds inputBody)
-     msgBody = inputBody {messageType = InitOkType, inReplyTo = newMsgId, nodeId = Nothing, nodeIds = Nothing}
-     msg = Message { src = Just $ nodeID newNode, dest = src inputMsg, body = Just msgBody }
+    inputBody = body inputMsg
+    newMsgId = msgId inputBody
+    newNode = updateNode node (fromJust $ nodeId inputBody) (fromJust $ nodeIds inputBody)
+    msgBody = inputBody {msgType = InitOkType, inReplyTo = newMsgId, nodeId = Nothing, nodeIds = Nothing}
+    msg = Message {src = nodeID newNode, dest = src inputMsg, body = msgBody}
 
 updateNode :: Node -> String -> [String] -> Node
 updateNode node newNodeId newNodeIds = node {nodeID = newNodeId, nodeIDs = newNodeIds}
+
+decodeMessage :: BS.ByteString ->  Message
+decodeMessage = fromJust . decode
