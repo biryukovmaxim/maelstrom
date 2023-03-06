@@ -29,10 +29,7 @@ loop node = do
       BSL.putStr $ appendNewline outPutMsg
       hFlush stdout
       loop newNode
-    Nothing -> do
-      putStrLn "nothing to output" 
-      hFlush stdout
-      loop node
+    Nothing -> loop node
 
 appendNewline :: BSL.ByteString -> BSL.ByteString
 appendNewline bs = BSB.toLazyByteString $ BSB.lazyByteString bs <> BSB.charUtf8 '\n'
@@ -47,5 +44,5 @@ myNode =
     }
 
 myCustomHandler :: String -> MessageBody -> Maybe MessageBody
-myCustomHandler "echo" inputBody = Just inputBody { inReplyTo = msgId inputBody, msgType = CustomMessageType "echo_ok"} 
-myCustomHandler _ _ = Nothing 
+myCustomHandler "echo" inputBody = Just inputBody {inReplyTo = msgId inputBody, msgType = CustomMessageType "echo_ok"}
+myCustomHandler _ _ = Nothing
