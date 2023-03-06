@@ -1,29 +1,23 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE Strict #-}
 
-import Node (emptyNode, handleRawMessage, Node)
-import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Builder as BSB
-
-import System.IO (hSetBuffering, stdin, BufferMode(..), hFlush, stdout)
-
--- main :: IO ()
--- main = loop emptyNode
---  where
---    loop node = do
---      input <- BS.getContents
---      case handleRawMessage node input of
---        Just (updatedNode, output) -> do
---          BS.putStr output
---          loop updatedNode
---        Nothing -> loop node
+import qualified Data.ByteString.Lazy as BSL
+import Message
+import Node (Node (..), handleRawMessage)
+import System.IO
+  ( BufferMode (..),
+    hFlush,
+    hSetBuffering,
+    stdin,
+    stdout,
+  )
 
 main :: IO ()
-
 main = do
   hSetBuffering stdin LineBuffering
-  loop emptyNode
+  loop myNode
 
 loop :: Node -> IO ()
 loop node = do
@@ -35,8 +29,23 @@ loop node = do
       BSL.putStr $ appendNewline outPutMsg
       hFlush stdout
       loop newNode
-    Nothing -> loop node
-      
+    Nothing -> do
+      putStrLn "nothing to output" 
+      hFlush stdout
+      loop node
 
 appendNewline :: BSL.ByteString -> BSL.ByteString
 appendNewline bs = BSB.toLazyByteString $ BSB.lazyByteString bs <> BSB.charUtf8 '\n'
+
+myNode :: Node
+myNode =
+  Node
+    { nodeID = "",
+      nextMsgID = 0,
+      nodeIDs = [],
+      customHandler = myCustomHandler
+    }
+
+myCustomHandler :: String -> MessageBody -> Maybe MessageBody
+myCustomHandler "echo" inputBody = Just inputBody { inReplyTo = msgId inputBody, msgType = CustomMessageType "echo_ok"} 
+myCustomHandler _ _ = Nothing 

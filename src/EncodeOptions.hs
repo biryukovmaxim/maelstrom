@@ -16,4 +16,5 @@ msgBodyOptions =
           "msgType" -> "type"
           f -> camelTo2 '_' f
     , omitNothingFields = True
+    , rejectUnknownFields = False
     }

@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE Strict #-}
 
 module Message
   ( Message (..),
@@ -13,6 +14,7 @@ import qualified Data.Text as T
 import GHC.Generics
 import EncodeOptions(msgBodyOptions)
 import Data.Aeson.TH (deriveJSON)
+import Data.HashMap.Strict (HashMap)
 
 data Message = Message
   { src :: String,
@@ -28,15 +30,13 @@ data MessageBody = MessageBody
     code :: Maybe Int,
     text :: Maybe String,
     nodeId :: Maybe String,
-    nodeIds :: Maybe [String]
+    nodeIds :: Maybe [String],
+    other :: Maybe (HashMap String Value) -- catch-all field
   }
   deriving (Show, Eq, Generic)
 
 data MessageType = InitMessageType | CustomMessageType String | InitOkType
   deriving (Show, Eq)
-
---instance FromJSON MessageBody where
---  parseJSON = genericParseJSON $ aesonDrop 0 snakeCase
 
 instance FromJSON MessageType where
   parseJSON (String s)
@@ -51,5 +51,4 @@ instance ToJSON MessageType where
   toJSON (CustomMessageType s) = String (T.pack s)
 
 $(deriveJSON msgBodyOptions ''MessageBody)
-instance ToJSON Message
-instance FromJSON Message
+$(deriveJSON defaultOptions ''Message)
