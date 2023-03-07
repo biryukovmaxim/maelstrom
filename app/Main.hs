@@ -19,7 +19,7 @@ main = do
   hSetBuffering stdin LineBuffering
   loop myNode
 
-loop :: Node -> IO ()
+loop :: Node MyState -> IO ()
 loop node = do
   input <- BS.hGetLine stdin
   let lazyInput = BSL.fromStrict input
@@ -34,15 +34,18 @@ loop node = do
 appendNewline :: BSL.ByteString -> BSL.ByteString
 appendNewline bs = BSB.toLazyByteString $ BSB.lazyByteString bs <> BSB.charUtf8 '\n'
 
-myNode :: Node
+type MyState = ()
+
+myNode :: Node MyState
 myNode =
   Node
     { nodeID = "",
       nextMsgID = 0,
       nodeIDs = [],
-      customHandler = myCustomHandler
+      customHandler = myCustomHandler,
+      state = ()
     }
 
-myCustomHandler :: String -> MessageBody -> IO (Maybe MessageBody)
-myCustomHandler "echo" inputBody = pure $ Just inputBody {inReplyTo = msgId inputBody, msgType = CustomMessageType "echo_ok"}
-myCustomHandler _ _ = pure Nothing
+myCustomHandler :: MyState -> String -> MessageBody -> IO (Maybe (MyState, MessageBody))
+myCustomHandler s "echo" inputBody = pure $ Just (s, inputBody {inReplyTo = msgId inputBody, msgType = CustomMessageType "echo_ok"})
+myCustomHandler _ _ _ = pure Nothing
