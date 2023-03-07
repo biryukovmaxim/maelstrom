@@ -52,6 +52,9 @@ executables:
     dependencies:
     - maelstrom
     - bytestring
+    - uuid
+    - unordered-containers
+    - aeson
 
 tests:
   maelstrom-test:

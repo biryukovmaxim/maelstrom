@@ -15,23 +15,27 @@ data Node = Node
   { nodeID :: String,
     nextMsgID :: Int,
     nodeIDs :: [String],
-    customHandler :: String -> MessageBody -> Maybe MessageBody
+    customHandler :: String -> MessageBody -> IO (Maybe MessageBody)
   }
 
-handleRawMessage :: Node -> BS.ByteString -> Maybe (Node, BS.ByteString)
+handleRawMessage :: Node -> BS.ByteString -> IO (Maybe (Node, BS.ByteString))
 handleRawMessage node input = do
-  message <- decode input
-  (newNode, outputMsg) <- handleMessage node message
-  Just (newNode, encode outputMsg)
+  case decode input of
+    Nothing -> pure Nothing
+    Just message -> do
+      res <- handleMessage node message
+      case res of
+        Nothing -> pure Nothing
+        Just (newNode, outputMsg) -> pure $ Just (newNode, encode outputMsg)
 
-handleMessage :: Node -> Message -> Maybe (Node, Message)
+handleMessage :: Node -> Message -> IO (Maybe (Node, Message))
 handleMessage node msg@(Message _ _ b) =
   case msgType b of
-    InitMessageType -> Just (newNode, newMessage)
+    InitMessageType -> pure $ Just (newNode, newMessage)
       where
         (newNode, newMessage) = handleInitMessage node msg
     CustomMessageType customType -> handleCustomMessage node customType msg
-    InitOkType -> Nothing
+    InitOkType -> pure Nothing
 
 handleInitMessage :: Node -> Message -> (Node, Message)
 handleInitMessage node inputMsg = (newNode, msg)
@@ -42,11 +46,13 @@ handleInitMessage node inputMsg = (newNode, msg)
     msgBody = inputBody {msgType = InitOkType, inReplyTo = newMsgId, nodeId = Nothing, nodeIds = Nothing}
     msg = Message {src = nodeID newNode, dest = src inputMsg, body = msgBody}
 
-handleCustomMessage :: Node -> String -> Message -> Maybe (Node, Message)
+handleCustomMessage :: Node -> String -> Message -> IO (Maybe (Node, Message))
 handleCustomMessage node mt msg = do
-  msgBody <- customHandler node mt (body msg)
+  mbMsgBody <- customHandler node mt (body msg)
   let newNode = increaseMsgID node
-  return (newNode, Message {src = nodeID node, dest = src msg, body = msgBody {msgId = Just $ nextMsgID newNode}})
+  case mbMsgBody of
+    Just msgBody -> pure $ Just (newNode, Message {src = nodeID node, dest = src msg, body = msgBody {msgId = Just $ nextMsgID newNode}})
+    Nothing -> pure Nothing
 
 updateNodeID :: Node -> String -> [String] -> Node
 updateNodeID node newNodeId newNodeIds = node {nodeID = newNodeId, nodeIDs = newNodeIds}
