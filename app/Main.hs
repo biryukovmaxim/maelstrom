@@ -47,5 +47,5 @@ myNode =
     }
 
 myCustomHandler :: MyState -> String -> MessageBody -> IO (Maybe (MyState, MessageBody))
-myCustomHandler s "echo" inputBody = pure $ Just (s, inputBody {inReplyTo = msgId inputBody, msgType = CustomMessageType "echo_ok"})
+myCustomHandler s "echo" inputBody = pure $ Just (s, inputBody {msgType = CustomMessageType "echo_ok"})
 myCustomHandler _ _ _ = pure Nothing
