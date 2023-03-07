@@ -54,26 +54,26 @@ myNode =
     }
 
 myCustomHandler :: MyState -> String -> MessageBody -> IO (Maybe (MyState, MessageBody))
-myCustomHandler s "echo" inputBody = pure $ Just (s, inputBody {inReplyTo = msgId inputBody, msgType = CustomMessageType "echo_ok"})
+myCustomHandler s "echo" inputBody = pure $ Just (s, inputBody {msgType = CustomMessageType "echo_ok"})
 myCustomHandler s "generate" inputBody = do
   randomUUID <- nextRandom
   let uuidString = T.String $ toText randomUUID
   let oldOther = other inputBody
   let newOther = HM.insert "id" uuidString oldOther
-  pure $ Just (s, inputBody {inReplyTo = msgId inputBody, msgType = CustomMessageType "generate_ok", other = newOther})
+  pure $ Just (s, inputBody {msgType = CustomMessageType "generate_ok", other = newOther})
 myCustomHandler s "broadcast" inputBody = pure $ Just (newS, outBody)
   where
     value = HM.lookup "message" $ other inputBody
     newS = case value of
       Just (T.Number n) -> s ++ [fromJust $ toBoundedInteger n]
       _ -> s
-    outBody = inputBody {other = HM.empty, inReplyTo = msgId inputBody, msgType = CustomMessageType "broadcast_ok"}
+    outBody = inputBody {other = HM.empty, msgType = CustomMessageType "broadcast_ok"}
 myCustomHandler s "read" inputBody = pure $ Just (s, outBody)
   where
     messages = T.Array $ V.fromList $ map ((T.Number . unsafeFromRational) . toRational) s
     fields = HM.insert "messages" messages HM.empty
-    outBody = inputBody {other = fields, inReplyTo = msgId inputBody, msgType = CustomMessageType "read_ok"}
+    outBody = inputBody {other = fields, msgType = CustomMessageType "read_ok"}
 myCustomHandler s "topology" inputBody = pure $ Just (s, outBody)
   where
-    outBody = inputBody {other = HM.empty, inReplyTo = msgId inputBody, msgType = CustomMessageType "topology_ok"}
+    outBody = inputBody {other = HM.empty, msgType = CustomMessageType "topology_ok"}
 myCustomHandler _ _ _ = pure Nothing

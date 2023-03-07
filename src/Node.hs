@@ -53,8 +53,9 @@ handleCustomMessage node mt msg = do
   let state' = state node
   mbStateMsgBody <- handler state' mt (body msg)
   let newNode = increaseMsgID node
+  let replyTo = msgId $ body msg
   case mbStateMsgBody of
-    Just (newState, msgBody) -> pure $ Just (newNode {state = newState}, Message {src = nodeID node, dest = src msg, body = msgBody {msgId = Just $ nextMsgID newNode}})
+    Just (newState, msgBody) -> pure $ Just (newNode {state = newState}, Message {src = nodeID node, dest = src msg, body = msgBody {msgId = Just $ nextMsgID newNode, inReplyTo = replyTo}})
     Nothing -> pure Nothing
 
 updateNodeID :: Node a -> String -> [String] -> Node a
