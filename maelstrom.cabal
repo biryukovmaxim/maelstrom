@@ -54,8 +54,10 @@ executable maelstrom-exe
     , base >=4.7 && <5
     , bytestring
     , maelstrom
+    , scientific
     , unordered-containers
     , uuid
+    , vector
   default-language: Haskell2010
 
 test-suite maelstrom-test
