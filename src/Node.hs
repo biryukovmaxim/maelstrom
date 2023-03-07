@@ -16,7 +16,7 @@ data Node a = Node
     nextMsgID :: Int,
     nodeIDs :: [String],
     state :: a,
-    customHandler :: a -> String -> MessageBody -> IO (Maybe (a, MessageBody))
+    customHandler :: String -> a -> MessageBody -> IO (Maybe (a, MessageBody))
   }
 
 handleRawMessage :: Node a -> BS.ByteString -> IO (Maybe (Node a, BS.ByteString))
@@ -51,7 +51,7 @@ handleCustomMessage :: Node a -> String -> Message -> IO (Maybe (Node a, Message
 handleCustomMessage node mt msg = do
   let handler = customHandler node
   let state' = state node
-  mbStateMsgBody <- handler state' mt (body msg)
+  mbStateMsgBody <- handler mt state' (body msg)
   let newNode = increaseMsgID node
   let replyTo = msgId $ body msg
   case mbStateMsgBody of

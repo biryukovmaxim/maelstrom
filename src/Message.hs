@@ -52,7 +52,7 @@ instance ToJSON MessageType where
 instance FromJSON MessageBody where
   parseJSON = withObject "MessageBody" $ \o -> do
     let knownFields = ["type", "msg_id", "in_reply_to", "code", "text", "node_id", "node_ids"]
-    unknownFields <- flip HM.filterWithKey <$> parseJSON (Object o) <*> pure (\key -> \_ -> key `notElem` knownFields)
+    unknownFields <- flip HM.filterWithKey <$> parseJSON (Object o) <*> pure (\key _ -> key `notElem` knownFields)
     msgType <- o .: fromString "type"
     msgId <- o .:? fromString "msg_id"
     inReplyTo <- o .:? fromString "in_reply_to"
