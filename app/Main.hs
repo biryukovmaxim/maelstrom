@@ -26,7 +26,7 @@ main = do
   hSetBuffering stdin LineBuffering
   loop myNode
 
-loop :: Node [Int] -> IO ()
+loop :: Node MyState -> IO ()
 loop node = do
   input <- BS.hGetLine stdin
   let lazyInput = BSL.fromStrict input
